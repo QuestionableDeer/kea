@@ -10,7 +10,7 @@
 
 This is a DMG Game Boy emulator program written in C++17, conforming to the 
 architecture specifications in [gbdev.io](https://gbdev.io/pandocs/) and the
-[Game Boy: Complete Technical Reference](https://gekkio.fi/files/gb-docs/gbctr.pdf).
+Game Boy [Complete Technical Reference](https://gekkio.fi/files/gb-docs/gbctr.pdf).
 
 Graphics, sound, and user input are all handled via the [SDL2 Library](https://wiki.libsdl.org/SDL2/FrontPage).
 
