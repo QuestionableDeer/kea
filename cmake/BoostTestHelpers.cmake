@@ -16,4 +16,6 @@ function(add_boost_test SOURCE_FILE_NAME)
 			COMMAND ${TEST_EXECUTABLE_NAME} --run_test=${TEST_NAME}
 			--catch_system_error=yes)
 	endforeach()
+
+	# TODO: add corresponding search for BOOST_DATA_TEST_CASE entries
 endfunction()
