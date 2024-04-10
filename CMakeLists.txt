@@ -4,7 +4,13 @@ if (NOT DEFINED CMAKE_CXX_STANDARD)
 	set(CMAKE_CXX_STANDARD 17)
 endif()
 
-project("kea" VERSION 0.0.1 LANGUAGES CXX)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+project(
+	"kea" 
+	VERSION 0.0.1 
+	DESCRIPTION "A Game Boy emulator in C++"
+	LANGUAGES CXX)
 
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 	message(
@@ -13,41 +19,11 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 		)
 endif()
 
-# test out using cppcheck
-find_program(CPPCHECK NAMES cppcheck)
-if (CPPCHECK)
-	if (CMAKE_GENERATOR MATCHES ".*Visual Studio.*")
-		set(CPPCHECK_TEMPLATE "vs")
-	else()
-		set(CPPCHECK_TEMPLATE "gcc")
-	endif()
+include(ProjectOptions.cmake)
 
-	set(SUPPRESS_DIR "*:${CMAKE_CURRENT_BINARY_DIR}/_deps/*.h")
-	message(STATUS "CPPCHECK_OPTIONS suppress: ${SUPPRESS_DIR}")
-	set(CMAKE_CXX_CPPCHECK
-		${CPPCHECK}
-		--template=${CPPCHECK_TEMPLATE}
-		--enable=style,performance,warning,portability
-		--inline-suppr
-		--suppress=cppcheckError
-		--suppress=internalAstError
-		--suppress=unmatchedSuppression
-		--suppress=passedByValue
-		--suppress=syntaxError
-		--suppress=preprocessorErrorDirective
-		--suppress=inconclusive
-		--suppress=${SUPPRESS_DIR}
-		--error-exitcode=2)
-
-	if(NOT ${CMAKE_CXX_STANDARD} STREQUAL "")
-		set(CMAKE_CXX_CPPCHECK ${CMAKE_CXX_CPPCHECK} --std=c++${CMAKE_CXX_STANDARD})
-	endif()
-
-	message(STATUS "CMAKE_CXX_CPPCHECK equals: ${CMAKE_CXX_CPPCHECK}")
-
-else()
-	message(${WARNING_MESSAGE} "cppcheck requested but executable not found")
-endif()
+kea_setup_options()
+kea_global_options()
+kea_local_options()
 
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
