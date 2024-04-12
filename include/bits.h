@@ -7,15 +7,19 @@
 
 namespace KeaBits {
 
+static constexpr Word loMask = 0x00FF;
+
 constexpr auto wordFromBytes(Byte lo, Byte hi) -> Word {
   Word result = hi;
-  return (result << CHAR_BIT) | lo;
+  return static_cast<Word>((result << CHAR_BIT) | lo);
 }
 
-constexpr auto getLowByte(Word word) -> Byte { return (word & 0x00FF); }
+constexpr auto getLowByte(Word word) -> Byte {
+  return static_cast<Byte>(word & loMask);
+}
 
 constexpr auto getHighByte(Word word) -> Byte {
-  return (word >> CHAR_BIT) & 0x00FF;
+  return static_cast<Byte>((word >> CHAR_BIT) & loMask);
 }
 
 }; // namespace KeaBits
