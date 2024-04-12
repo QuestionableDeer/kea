@@ -25,14 +25,19 @@ kea_setup_options()
 kea_global_options()
 kea_local_options()
 
+target_compile_features(kea_options INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+
+add_library(kea::kea_options ALIAS kea_options)
+add_library(kea::kea_warnings ALIAS kea_warnings)
+
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 set(exe_sources src/main.cpp)
 set(headers src/bits.h src/types.h)
 
-add_executable(${PROJECT_NAME} ${exe_sources})
+add_executable(${PROJECT_NAME} src/main.cpp)
 
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
+target_link_libraries(${PROJECT_NAME} PRIVATE kea_options kea_warnings)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
