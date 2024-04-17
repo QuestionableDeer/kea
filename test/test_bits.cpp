@@ -4,10 +4,9 @@
 #include "bits.h"
 #include "types.h"
 
+#include <random>
 #include <utility>
 #include <vector>
-
-// namespace bdata = boost::unit_test::data;
 
 BOOST_AUTO_TEST_CASE(low_byte_edge_cases) {
 
@@ -31,14 +30,33 @@ BOOST_AUTO_TEST_CASE(high_byte_edge_cases) {
   }
 }
 
-// BOOST_DATA_TEST_CASE(
-//     property_test,
-//     bdata::random(bdata::distribution =
-//                       std::uniform_int_distribution<Word>(0x0000, 0xFFFF)) ^
-//         bdata::xrange(1000),
-//     rsample, index) {
-//
-//   BOOST_TEST(KeaBits::wordFromBytes(KeaBits::getLowByte(rsample),
-//                                     KeaBits::getHighByte(rsample)) ==
-//                                     rsample);
-// }
+BOOST_AUTO_TEST_CASE(join_from_split_property) {
+  unsigned int seed = 5489;
+  std::default_random_engine eng(seed);
+  std::uniform_int_distribution<Word> dist;
+
+  const size_t trials = 1000;
+  for (size_t i = 0; i < trials; i++) {
+    Word rsample = dist(eng);
+    BOOST_TEST(KeaBits::wordFromBytes(KeaBits::getLowByte(rsample),
+                                      KeaBits::getHighByte(rsample)) ==
+               rsample);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(split_from_join_property) {
+  unsigned int seed = 5489;
+  std::default_random_engine eng(seed);
+  std::uniform_int_distribution<Byte> dist;
+
+  const size_t trials = 1000;
+  for (size_t i = 0; i < trials; i++) {
+    Byte loSample = dist(eng);
+    Byte hiSample = dist(eng);
+    BOOST_TEST(KeaBits::getLowByte(
+                   KeaBits::wordFromBytes(loSample, hiSample)) == loSample);
+
+    BOOST_TEST(KeaBits::getHighByte(
+                   KeaBits::wordFromBytes(loSample, hiSample)) == hiSample);
+  }
+}

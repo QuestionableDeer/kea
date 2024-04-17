@@ -17,5 +17,4 @@ function(add_boost_test SOURCE_FILE_NAME)
 			--catch_system_error=yes)
 	endforeach()
 
-	# TODO: add corresponding search for BOOST_DATA_TEST_CASE entries
 endfunction()
