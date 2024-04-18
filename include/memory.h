@@ -8,7 +8,7 @@
 
 class Memory {
 public:
-  static constexpr memSize = 0x10000;
+  static constexpr std::size_t memSize = 0x10000;
 
   Memory();
 

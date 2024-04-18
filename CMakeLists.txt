@@ -32,10 +32,7 @@ add_library(kea::kea_warnings ALIAS kea_warnings)
 
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
-set(exe_sources src/main.cpp src/memory.cpp)
-set(headers src/bits.h src/types.h src/memory.h)
-
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/memory.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE kea_options kea_warnings)
 

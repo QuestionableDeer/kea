@@ -1,5 +1,5 @@
 /*
- * kea - a C++ Chip-8 emulation program
+ * kea - a C++ Game Boy emulation program
  * Copyright (C) 2023 QuestionableDeer
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,10 @@
  */
 
 #include "memory.h"
+#include "bits.h"
+
+#include <algorithm>
+#include <iterator>
 
 #ifdef MEM_DEBUG
 #include <cstdlib>
@@ -58,39 +62,69 @@ void Memory::setByte(Word addr, Byte val) {
   }
 
 #else
-
+  memory_[addr] = val;
 #endif
 }
 
 auto Memory::fetchWord(Word addr) const -> Word {
   // TODO: add block logic for detailed memory map
 
-  std::ignore = addr;
 #ifdef MEM_DEBUG
+  Word result;
+  try {
+    Byte lo = memory_.at(addr);
+    Byte hi = memory_.at(addr + 1);
+    result = KeaBits::wordFromBytes(lo, hi);
+  } catch (std::out_of_range const &err) {
+    std::cerr << "fetchWord invalid memory access: " << err.what();
+    std::exit(EXIT_FAILURE);
+  }
 
+  return result;
 #else
-  return 0xBADD;
+  Byte lo = memory_[addr];
+  Byte hi = memory_[addr + 1];
+
+  return KeaBits::wordFromBytes(lo, hi);
 #endif
 }
 
 void Memory::setWord(Word addr, Word val) {
   // TODO: add block logic for detailed memory map
 
-  std::ignore = addr;
-  std::ignore = val;
+  Byte const lo = KeaBits::getLowByte(val);
+  Byte const hi = KeaBits::getHighByte(val);
+
 #ifdef MEM_DEBUG
-
+  try {
+    memory_.at(addr) = lo;
+    memory_.at(addr + 1) = hi;
+  } catch (std::out_of_range const &err) {
+    std::cerr << "setWord invalid memory access: " << err.what();
+    std::exit(EXIT_FAILURE);
+  }
 #else
-
+  memory_[addr] = lo;
+  memory_[addr + 1] = hi;
 #endif
 }
 
 void Memory::loadRom(std::istream &rom) {
-  // TODO: implement
-  std::ignore = rom;
+  // TODO: figure out how ROM banking works with input files
+
+  // since this is an array of bytes that C++ treats as chars, we need to avoid
+  // parsing bytes that overlap with ASCII whitespace as newlines, etc.
+  rom.unsetf(std::ios::skipws);
+  std::copy_n(std::istream_iterator<Byte>(rom), memSize, memory_.begin());
+  rom.setf(std::ios::skipws);
 }
 
 void Memory::dumpRom(std::ostream &rom) {
-  // TODO: implement
-  std::ignore = rom;
+  // TODO: figure out ROM banking
+
+  // since this is an array of bytes that C++ treats as chars, we need to avoid
+  // parsing bytes that overlap with ASCII whitespace as newlines, etc.
+  rom.unsetf(std::ios::skipws);
+  std::copy(memory_.begin(), memory_.end(), std::ostream_iterator<Byte>(rom));
+  rom.setf(std::ios::skipws);
 }
