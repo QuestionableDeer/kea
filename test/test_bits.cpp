@@ -8,6 +8,9 @@
 #include <utility>
 #include <vector>
 
+static unsigned int const seed = 5489;
+static size_t const trials = 1000;
+
 BOOST_AUTO_TEST_CASE(low_byte_edge_cases) {
 
   std::vector<std::pair<Word, Byte>> testData = {
@@ -31,11 +34,9 @@ BOOST_AUTO_TEST_CASE(high_byte_edge_cases) {
 }
 
 BOOST_AUTO_TEST_CASE(join_from_split_property) {
-  unsigned int seed = 5489;
   std::default_random_engine eng(seed);
   std::uniform_int_distribution<Word> dist;
 
-  const size_t trials = 1000;
   for (size_t i = 0; i < trials; i++) {
     Word rsample = dist(eng);
     BOOST_TEST(KeaBits::wordFromBytes(KeaBits::getLowByte(rsample),
@@ -45,11 +46,9 @@ BOOST_AUTO_TEST_CASE(join_from_split_property) {
 }
 
 BOOST_AUTO_TEST_CASE(split_from_join_property) {
-  unsigned int seed = 5489;
   std::default_random_engine eng(seed);
   std::uniform_int_distribution<Byte> dist;
 
-  const size_t trials = 1000;
   for (size_t i = 0; i < trials; i++) {
     Byte loSample = dist(eng);
     Byte hiSample = dist(eng);
