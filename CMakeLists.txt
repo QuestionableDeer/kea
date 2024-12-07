@@ -32,7 +32,7 @@ add_library(kea::kea_warnings ALIAS kea_warnings)
 
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
-add_executable(${PROJECT_NAME} src/main.cpp src/memory.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/memory.cpp src/registers.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE kea_options kea_warnings)
 
@@ -41,7 +41,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/i
 enable_testing()
 
 set(test_sources test/test_bits.cpp test/test_memory.cpp)
-set(test_helpers src/memory.cpp)
+set(test_helpers src/memory.cpp src/registers.cpp)
 
 include(cmake/BoostTestHelpers.cmake)
 foreach(TEST_NAME ${test_sources})
