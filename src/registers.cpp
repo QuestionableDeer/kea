@@ -21,28 +21,28 @@
 #include "bits.h"
 
 void Registers::set_bc(Word value) {
-  b_ = KeaBits::getHighByte(value);
-  c_ = KeaBits::getLowByte(value);
+  b = KeaBits::getHighByte(value);
+  c = KeaBits::getLowByte(value);
 }
 
 void Registers::set_de(Word value) {
-  d_ = KeaBits::getHighByte(value);
-  e_ = KeaBits::getLowByte(value);
+  d = KeaBits::getHighByte(value);
+  e = KeaBits::getLowByte(value);
 }
 
 void Registers::set_hl(Word value) {
-  h_ = KeaBits::getHighByte(value);
-  l_ = KeaBits::getLowByte(value);
+  h = KeaBits::getHighByte(value);
+  l = KeaBits::getLowByte(value);
 }
 
 auto Registers::get_bc() const -> Word {
-  return KeaBits::wordFromBytes(c_, b_);
+  return KeaBits::wordFromBytes(c, b);
 }
 
 auto Registers::get_de() const -> Word {
-  return KeaBits::wordFromBytes(e_, d_);
+  return KeaBits::wordFromBytes(e, d);
 }
 
 auto Registers::get_hl() const -> Word {
-  return KeaBits::wordFromBytes(l_, h_);
+  return KeaBits::wordFromBytes(l, h);
 }

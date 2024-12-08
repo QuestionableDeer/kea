@@ -35,16 +35,16 @@ public:
   [[nodiscard]] auto get_carry_flag() const -> bool { return flags_[FlagNames::FULL_CARRY]; }
 
   // single registers are public data
-  Byte a_={0x0};
-  Byte b_={0x0};
-  Byte c_={0x0};
-  Byte d_={0x0};
-  Byte e_={0x0};
-  Byte h_={0x0};
-  Byte l_={0x0};
+  Byte a={0x0};
+  Byte b={0x0};
+  Byte c={0x0};
+  Byte d={0x0};
+  Byte e={0x0};
+  Byte h={0x0};
+  Byte l={0x0};
 
-  Word sp_={0x0};
-  Word pc_={0x0};
+  Word sp={0x0};
+  Word pc={0x0};
 
 private:
   enum FlagNames { ZERO = 0, SUB, HALF_CARRY, FULL_CARRY };
