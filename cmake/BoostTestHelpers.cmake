@@ -1,7 +1,7 @@
-function(add_boost_test SOURCE_FILE_NAME HELPER_FILES)
+function(add_boost_test SOURCE_FILE_NAME)
 	get_filename_component(TEST_EXECUTABLE_NAME ${SOURCE_FILE_NAME} NAME_WE)
 
-	add_executable(${TEST_EXECUTABLE_NAME} ${SOURCE_FILE_NAME} ${HELPER_FILES})
+	add_executable(${TEST_EXECUTABLE_NAME} ${SOURCE_FILE_NAME} ${ARGN})
 	target_link_libraries(${TEST_EXECUTABLE_NAME} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 	target_include_directories(${TEST_EXECUTABLE_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
