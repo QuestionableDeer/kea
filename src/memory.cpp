@@ -29,7 +29,6 @@
 #endif
 
 Memory::Memory() : memory_() {
-  // TODO: check register initializations
   memory_.fill(0x00);
 }
 

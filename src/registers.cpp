@@ -20,29 +20,90 @@
 #include "registers.h"
 #include "bits.h"
 
-void Registers::set_bc(Word value) {
-  b = KeaBits::getHighByte(value);
-  c = KeaBits::getLowByte(value);
+#include <cassert>
+#include <stdexcept>
+
+Registers::Registers() : byteRegisters_() {
+  // TODO check register initialization
+  byteRegisters_.fill(0x0);
 }
 
-void Registers::set_de(Word value) {
-  d = KeaBits::getHighByte(value);
-  e = KeaBits::getLowByte(value);
+void Registers::set_r8(const Byte id, Byte value) {
+  if (id == 6) {
+    throw std::runtime_error("Invalid r8 id");
+  }
+
+  byteRegisters_[id] = value;
 }
 
-void Registers::set_hl(Word value) {
-  h = KeaBits::getHighByte(value);
-  l = KeaBits::getLowByte(value);
+auto Registers::get_r8(const Byte id) const -> Byte {
+  if (id == 6) {
+    throw std::runtime_error("Invalid r8 id");
+  }
+
+  return byteRegisters_[id];
 }
 
-auto Registers::get_bc() const -> Word {
-  return KeaBits::wordFromBytes(c, b);
+void Registers::set_r16(const Byte id, Word value) {
+  switch (id) {
+    case 0:
+      // r16 = BC
+      byteRegisters_[ByteRegisters::B] = KeaBits::getHighByte(value);
+      byteRegisters_[ByteRegisters::C] = KeaBits::getLowByte(value);
+      break;
+
+    case 1:
+      // r16 = DE
+      byteRegisters_[ByteRegisters::D] = KeaBits::getHighByte(value);
+      byteRegisters_[ByteRegisters::E] = KeaBits::getLowByte(value);
+      break;
+
+    case 2:
+      // r16 = HL
+      byteRegisters_[ByteRegisters::H] = KeaBits::getHighByte(value);
+      byteRegisters_[ByteRegisters::L] = KeaBits::getLowByte(value);
+      break;
+
+    case 3:
+      // r16 = SP
+      sp = value;
+      break;
+
+    default:
+      throw std::runtime_error("Invalid r16 id");
+  }
 }
 
-auto Registers::get_de() const -> Word {
-  return KeaBits::wordFromBytes(e, d);
-}
+auto Registers::get_r16(const Byte id) const -> Word {
+  Word value = 0;
 
-auto Registers::get_hl() const -> Word {
-  return KeaBits::wordFromBytes(l, h);
+  switch (id) {
+    case 0:
+      // r16 = BC
+      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::C], 
+          byteRegisters_[ByteRegisters::B]);
+      break;
+
+    case 1:
+      // r16 = DE
+      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::E], 
+          byteRegisters_[ByteRegisters::D]);
+      break;
+
+    case 2:
+      // r16 = HL
+      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::L], 
+          byteRegisters_[ByteRegisters::H]);
+      break;
+
+    case 3:
+      // r16 = SP
+      value = sp;
+      break;
+
+    default:
+      throw std::runtime_error("Invalid r16 id");
+  }
+
+  return value;
 }
