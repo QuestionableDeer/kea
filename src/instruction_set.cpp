@@ -55,9 +55,10 @@ void InstructionSet::parse_and_execute(const Byte instruction) {
 void InstructionSet::load_r8_r8(const Byte instruction) {
   const Byte srcMask = 0b0111;
   const Byte destMask = 0b011'1000;
+  const Byte destShift = 3;
 
   const Byte source = instruction & srcMask;
-  const Byte dest = instruction & destMask;
+  const Byte dest = (instruction & destMask) >> destShift;
 
   if (source == Memory::ByteRegisters::HL_MEM && 
       dest == Memory::ByteRegisters::HL_MEM) {

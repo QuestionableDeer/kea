@@ -28,7 +28,6 @@ BOOST_AUTO_TEST_CASE(load_r8_r8) {
         continue;
       }
 
-      // FIXME: this is wrong for [HL] accesses because we can mangle H or L as part of src loop
       if (src == Memory::ByteRegisters::HL_MEM) {
         mem.set_r8(Memory::ByteRegisters::L, lo);
         mem.set_r8(Memory::ByteRegisters::H, hi);
