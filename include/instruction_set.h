@@ -26,6 +26,7 @@ private:
   // block 2 instructions
   void add_a_r8(const Byte regId);
   void and_a_r8(const Byte regId);
+  void xor_a_r8(const Byte regId);
 
   // block 3 instructions
   // TODO

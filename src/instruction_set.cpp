@@ -101,6 +101,7 @@ void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
 
     case 5:
       // xor
+      xor_a_r8(reg);
       break;
 
     case 6:
@@ -186,6 +187,28 @@ void InstructionSet::and_a_r8(const Byte regId) {
 
   memory_.clear_sub_flag();
   memory_.set_half_carry_flag();
+  memory_.clear_carry_flag();
+
+  // increment counters
+  memory_.pc++;
+  instructionTimer_++;
+}
+
+void InstructionSet::xor_a_r8(const Byte regId) {
+  // obtain result
+  const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
+  const Byte bVal = memory_.get_r8(regId);
+  const Byte result = aVal ^ bVal;
+
+  memory_.set_r8(Memory::ByteRegisters::A, result);
+
+  // update flags
+  if (result == 0) {
+    memory_.set_zero_flag();
+  }
+
+  memory_.clear_sub_flag();
+  memory_.clear_half_carry_flag();
   memory_.clear_carry_flag();
 
   // increment counters
