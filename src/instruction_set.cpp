@@ -40,10 +40,74 @@ void InstructionSet::parse_and_execute(const Byte instruction) {
 
     case 2:
       // TODO
+      resolve_block2_arithmetic(instruction);
       break;
 
     case 3:
       // TODO
+      break;
+
+    default:
+      // not reachable
+      break;
+  }
+}
+
+auto InstructionSet::check_half_carry(const Byte op1, const Byte op2) -> bool {
+  const Byte halfMax = 0xF;
+  const Byte lo1 = KeaBits::getLowNibble(op1);
+  const Byte lo2 = KeaBits::getLowNibble(op2);
+
+  return (lo1 + lo2) > halfMax;
+}
+
+auto InstructionSet::check_full_carry(const Byte op1, const Byte op2) -> bool {
+  const Byte max = 0xFF;
+  const Byte remainder = max - op1;
+
+  return op2 > remainder;
+}
+
+void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
+  const Byte opMask = 0b0111;
+  const Byte typeMask = 0b00111000;
+  const Byte typeShift = 3;
+
+  const Byte operation = (instruction & typeMask) >> typeShift;
+  const Byte reg = instruction & opMask;
+
+  switch (operation) {
+    case 0:
+      // add
+      add_a_r8(reg);
+      break;
+
+    case 1:
+      // adc
+      break;
+
+    case 2:
+      // sub
+      break;
+
+    case 3:
+      // sbc
+      break;
+
+    case 4:
+      // and
+      break;
+
+    case 5:
+      // xor
+      break;
+
+    case 6:
+      // or
+      break;
+
+    case 7:
+      // cp
       break;
 
     default:
@@ -74,6 +138,34 @@ void InstructionSet::load_r8_r8(const Byte instruction) {
 
 void InstructionSet::halt() {
   // FIXME: figure out halting details when more system is complete
+  memory_.pc++;
+  instructionTimer_++;
+}
+
+void InstructionSet::add_a_r8(const Byte regId) {
+  // add
+  const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
+  const Byte addend = memory_.get_r8(regId);
+  const Byte result = aVal + addend;
+
+  memory_.set_r8(Memory::ByteRegisters::A, result);
+
+  // update flags
+  if (result == 0) {
+    memory_.set_zero_flag();
+  }
+
+  memory_.clear_sub_flag();
+
+  if (check_half_carry(aVal, addend)) {
+    memory_.set_half_carry_flag();
+  }
+
+  if (check_full_carry(aVal, addend)) {
+    memory_.set_carry_flag();
+  }
+
+  // increment cycles and PC by 1
   memory_.pc++;
   instructionTimer_++;
 }

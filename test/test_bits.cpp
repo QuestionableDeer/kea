@@ -4,12 +4,15 @@
 #include "bits.h"
 #include "types.h"
 
+#include <limits>
 #include <random>
 #include <utility>
 #include <vector>
 
 static unsigned int const seed = 5489;
 static size_t const trials = 1000;
+
+constexpr static int BYTE_MAX = static_cast<int>(std::numeric_limits<Byte>::max());
 
 BOOST_AUTO_TEST_CASE(low_byte_edge_cases) {
 
@@ -57,5 +60,19 @@ BOOST_AUTO_TEST_CASE(split_from_join_property) {
 
     BOOST_TEST(KeaBits::getHighByte(
                    KeaBits::wordFromBytes(loSample, hiSample)) == hiSample);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(low_nibble_test) {
+  for (int b = 0; b < BYTE_MAX; b++) {
+    Byte lo = b & 0xF;
+    BOOST_TEST(KeaBits::getLowNibble(b) == lo);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(high_nibble_test) {
+  for (int b = 0; b < BYTE_MAX; b++) {
+    Byte hi = b >> 4;
+    BOOST_TEST(KeaBits::getHighNibble(b) == hi);
   }
 }
