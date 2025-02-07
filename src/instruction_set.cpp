@@ -53,19 +53,17 @@ void InstructionSet::parse_and_execute(const Byte instruction) {
   }
 }
 
-auto InstructionSet::check_half_carry(const Byte op1, const Byte op2) -> bool {
+auto InstructionSet::check_half_carry(const Byte op1, const Byte op2, const Byte carry) -> bool {
   const Byte halfMax = 0xF;
   const Byte lo1 = KeaBits::getLowNibble(op1);
   const Byte lo2 = KeaBits::getLowNibble(op2);
 
-  return (lo1 + lo2) > halfMax;
+  return (lo1 + lo2 + carry) > halfMax;
 }
 
-auto InstructionSet::check_full_carry(const Byte op1, const Byte op2) -> bool {
-  const Byte max = 0xFF;
-  const Byte remainder = max - op1;
-
-  return op2 > remainder;
+auto InstructionSet::check_full_carry(const Word op1, const Word op2, const Word carry) -> bool {
+  const Word max = 0xFF;
+  return (op1 + op2 + carry) > max;
 }
 
 void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
@@ -84,6 +82,7 @@ void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
 
     case 1:
       // adc
+      adc_a_r8(reg);
       break;
 
     case 2:
@@ -106,6 +105,7 @@ void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
 
     case 6:
       // or
+      or_a_r8(reg);
       break;
 
     case 7:
@@ -147,8 +147,8 @@ void InstructionSet::halt() {
 void InstructionSet::add_a_r8(const Byte regId) {
   // obtain result
   const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
-  const Byte addend = memory_.get_r8(regId);
-  const Byte result = aVal + addend;
+  const Byte bVal = memory_.get_r8(regId);
+  const Byte result = aVal + bVal;
 
   memory_.set_r8(Memory::ByteRegisters::A, result);
 
@@ -159,11 +159,12 @@ void InstructionSet::add_a_r8(const Byte regId) {
 
   memory_.clear_sub_flag();
 
-  if (check_half_carry(aVal, addend)) {
+  const Byte carry = 0;
+  if (check_half_carry(aVal, bVal, carry)) {
     memory_.set_half_carry_flag();
   }
 
-  if (check_full_carry(aVal, addend)) {
+  if (check_full_carry(aVal, bVal, carry)) {
     memory_.set_carry_flag();
   }
 
@@ -171,6 +172,38 @@ void InstructionSet::add_a_r8(const Byte regId) {
   memory_.pc++;
   instructionTimer_++;
 }
+
+void InstructionSet::adc_a_r8(const Byte regId) {
+  // obtain result
+  const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
+  const Byte bVal = memory_.get_r8(regId);
+  const Byte carry = memory_.get_carry_flag() ? 1 : 0;
+  Byte result = aVal + bVal;
+  result += carry;
+
+  memory_.set_r8(Memory::ByteRegisters::A, result);
+
+  // update flags
+  if (result == 0) {
+    memory_.set_zero_flag();
+  }
+
+  memory_.clear_sub_flag();
+
+  if (check_half_carry(aVal, bVal, carry)) {
+    memory_.set_half_carry_flag();
+  }
+
+  if (check_full_carry(aVal, bVal, carry)) {
+    memory_.set_carry_flag();
+  }
+
+  // increment cycles and PC by 1
+  memory_.pc++;
+  instructionTimer_++;
+
+}
+
 
 void InstructionSet::and_a_r8(const Byte regId) {
   // obtain result
@@ -199,6 +232,28 @@ void InstructionSet::xor_a_r8(const Byte regId) {
   const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
   const Byte bVal = memory_.get_r8(regId);
   const Byte result = aVal ^ bVal;
+
+  memory_.set_r8(Memory::ByteRegisters::A, result);
+
+  // update flags
+  if (result == 0) {
+    memory_.set_zero_flag();
+  }
+
+  memory_.clear_sub_flag();
+  memory_.clear_half_carry_flag();
+  memory_.clear_carry_flag();
+
+  // increment counters
+  memory_.pc++;
+  instructionTimer_++;
+}
+
+void InstructionSet::or_a_r8(const Byte regId) {
+  // obtain result
+  const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
+  const Byte bVal = memory_.get_r8(regId);
+  const Byte result = aVal | bVal;
 
   memory_.set_r8(Memory::ByteRegisters::A, result);
 

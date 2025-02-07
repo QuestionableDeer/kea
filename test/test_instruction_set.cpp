@@ -254,3 +254,53 @@ BOOST_AUTO_TEST_CASE(xor_a_r8) {
     }
   }
 }
+
+BOOST_AUTO_TEST_CASE(or_a_r8) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  const Byte blockCode = 0b1000'0000;
+  const Byte opCode = 0x6;
+  const Byte opShift = 3;
+
+  for (Byte reg = 0; reg < CHAR_BIT; reg++) {
+    if (reg == Memory::ByteRegisters::A || 
+        reg == Memory::ByteRegisters::HL_MEM) {
+      continue;
+    }
+
+    const Byte instruction = blockCode | (opCode << opShift) | reg;
+
+    for (int a = 0; a <= BYTE_MAX; a++) {
+      for (int b = 0; b <= BYTE_MAX; b++) {
+        // clear flags
+        mem.clear_zero_flag();
+        mem.clear_sub_flag();
+        mem.clear_half_carry_flag();
+        mem.clear_carry_flag();
+
+        // set registers
+        mem.set_r8(Memory::ByteRegisters::A, a);
+        mem.set_r8(reg, b);
+
+        // execute
+        iset.parse_and_execute(instruction);
+
+        const Byte expectVal = a | b;
+
+        // checks
+        BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == expectVal);
+
+        if (expectVal == 0) {
+          BOOST_TEST(mem.get_zero_flag());
+        } else {
+          BOOST_TEST(!mem.get_zero_flag());
+        }
+
+        BOOST_TEST(!mem.get_sub_flag());
+        BOOST_TEST(!mem.get_half_carry_flag());
+        BOOST_TEST(!mem.get_carry_flag());
+      }
+    }
+  }
+}
