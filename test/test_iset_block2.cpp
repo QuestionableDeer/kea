@@ -275,6 +275,56 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_half_carry) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(sub_a_r8_basic) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  const Byte blockCode = 0b1000'0000;
+  const Byte opCode = 0x2;
+  const Byte opShift = 3;
+
+  const Byte regMask = 0b0111;
+
+  for (int reg = 0; reg < CHAR_BIT; reg++) {
+    if (reg == Memory::ByteRegisters::HL_MEM || 
+        reg == Memory::ByteRegisters::A) {
+      continue;
+    }
+
+    const Byte regCode = reg & regMask;
+    const Byte instruction = blockCode | (opCode << opShift) | regCode;
+
+    for (int a = 0; a <= BYTE_MAX; a++) {
+      for (int b = 0; b <= BYTE_MAX; b++) {
+        // clear test flags
+        mem.clear_sub_flag();
+        mem.clear_carry_flag();
+
+        // set registers
+        mem.set_r8(Memory::ByteRegisters::A, a);
+        mem.set_r8(regCode, b);
+
+        // add
+        iset.parse_and_execute(instruction);
+
+        // check sum
+        BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == 
+            static_cast<Byte>(a - b));
+
+        // check N flag
+        BOOST_TEST(mem.get_sub_flag());
+
+        // check carry/borrow flag
+        if (b > a) {
+          BOOST_TEST(mem.get_carry_flag());
+        } else {
+          BOOST_TEST(!mem.get_carry_flag());
+        }
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(and_a_r8) {
   Memory mem;
   InstructionSet iset(mem);

@@ -53,6 +53,7 @@ void InstructionSet::parse_and_execute(const Byte instruction) {
   }
 }
 
+// static
 auto InstructionSet::check_half_carry(const Byte op1, const Byte op2, const Byte carry) -> bool {
   const Byte halfMax = 0xF;
   const Byte lo1 = KeaBits::getLowNibble(op1);
@@ -61,9 +62,23 @@ auto InstructionSet::check_half_carry(const Byte op1, const Byte op2, const Byte
   return (lo1 + lo2 + carry) > halfMax;
 }
 
+// static
 auto InstructionSet::check_full_carry(const Word op1, const Word op2, const Word carry) -> bool {
   const Word max = 0xFF;
   return (op1 + op2 + carry) > max;
+}
+
+// static
+auto InstructionSet::check_half_borrow(const Byte op1, const Byte op2, const Byte carry) -> bool {
+  const Byte lo1 = KeaBits::getLowNibble(op1);
+  const Byte lo2 = KeaBits::getLowNibble(op2);
+
+  return (lo2 + carry) > lo1;
+}
+
+// static
+auto InstructionSet::check_full_borrow(const Word op1, const Word op2, const Word carry) -> bool {
+  return (op2 + carry) > op1;
 }
 
 void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
@@ -87,6 +102,7 @@ void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
 
     case 2:
       // sub
+      sub_a_r8(reg);
       break;
 
     case 3:
@@ -207,6 +223,42 @@ void InstructionSet::adc_a_r8(const Byte regId) {
   }
 
   if (check_full_carry(aVal, bVal, carry)) {
+    memory_.set_carry_flag();
+  } else {
+    memory_.clear_carry_flag();
+  }
+
+  // increment cycles and PC by 1
+  memory_.pc++;
+  instructionTimer_++;
+}
+
+void InstructionSet::sub_a_r8(const Byte regId) {
+  // obtain result
+  const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
+  const Byte bVal = memory_.get_r8(regId);
+  const Byte result = aVal - bVal;
+
+  memory_.set_r8(Memory::ByteRegisters::A, result);
+
+  // update flags
+  if (result == 0) {
+    memory_.set_zero_flag();
+  } else {
+    memory_.clear_zero_flag();
+  }
+
+  memory_.set_sub_flag();
+
+  // if we con't clear carry flags here, they could mess up chained ops?
+  const Byte carry = 0;
+  if (check_half_borrow(aVal, bVal, carry)) {
+    memory_.set_half_carry_flag();
+  } else {
+    memory_.clear_half_carry_flag();
+  }
+
+  if (check_full_borrow(aVal, bVal, carry)) {
     memory_.set_carry_flag();
   } else {
     memory_.clear_carry_flag();
