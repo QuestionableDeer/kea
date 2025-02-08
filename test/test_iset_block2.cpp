@@ -13,13 +13,14 @@
 #include <vector>
 
 constexpr static int BYTE_MAX = static_cast<int>(std::numeric_limits<Byte>::max());
+constexpr static Byte HALF_MAX = 0xF;
+constexpr static Byte BLOCK_CODE = 0b1000'0000;
+constexpr static Byte OP_SHIFT = 0x3;
+constexpr static Byte REG_MASK = 0b0111;
 
 BOOST_AUTO_TEST_CASE(add_a_r8_basic) {
   Memory mem;
   InstructionSet iset(mem);
-
-  const Byte blockCode = 0b1000'0000;
-  const Byte regMask = 0b0111;
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
     if (reg == Memory::ByteRegisters::HL_MEM || 
@@ -27,10 +28,10 @@ BOOST_AUTO_TEST_CASE(add_a_r8_basic) {
       continue;
     }
 
-    const Byte regCode = reg & regMask;
+    const Byte regCode = reg & REG_MASK;
 
     // opcode for add is 0 so we exclude it here
-    const Byte instruction = blockCode | regCode;
+    const Byte instruction = BLOCK_CODE | regCode;
 
     for (int a = 0; a <= BYTE_MAX; a++) {
       for (int b = 0; b <= BYTE_MAX; b++) {
@@ -67,9 +68,10 @@ BOOST_AUTO_TEST_CASE(add_a_r8_zero_flag) {
   Memory mem;
   InstructionSet iset(mem);
 
-  // this should be the code for ADD A, B which is fine
-  const Byte instruction = 0b1000'0000;
-  const Byte regCode = 0x0;
+  // we only test a single register here, since basic test 
+  // covers register selection
+  const Byte regCode = 0x1;
+  const Byte instruction = BLOCK_CODE | regCode;
 
   std::vector<std::pair<Byte, Byte>> zeroTests = {
     {0x0, 0x0}, {0xFF, 0x1}, {0xFE, 0x2}, {0xFD, 0x3},
@@ -96,13 +98,13 @@ BOOST_AUTO_TEST_CASE(add_a_r8_half_carry) {
   Memory mem;
   InstructionSet iset(mem);
 
-  // this should be the code for ADD A, B which is fine
-  const Byte instruction = 0b1000'0000;
-  const Byte regCode = 0x0;
-  const Byte halfMax = 0xF;
+  // we only test a single register here, since basic test 
+  // covers register selection
+  const Byte regCode = 0x1;
+  const Byte instruction = BLOCK_CODE | regCode;
 
-  for (Byte a = 0; a <= halfMax; a++) {
-    for (Byte b = 0; b <= halfMax; b++) {
+  for (Byte a = 0; a <= HALF_MAX; a++) {
+    for (Byte b = 0; b <= HALF_MAX; b++) {
       // clear half carry
       mem.clear_half_carry_flag();
 
@@ -114,7 +116,7 @@ BOOST_AUTO_TEST_CASE(add_a_r8_half_carry) {
       iset.parse_and_execute(instruction);
 
       // check half carry
-      if ((a + b) > halfMax) {
+      if ((a + b) > HALF_MAX) {
         BOOST_TEST(mem.get_half_carry_flag());
       } else {
         BOOST_TEST(!mem.get_half_carry_flag());
@@ -127,11 +129,7 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_basic) {
   Memory mem;
   InstructionSet iset(mem);
 
-  const Byte blockCode = 0b1000'0000;
   const Byte opCode = 0x1;
-  const Byte opShift = 3;
-
-  const Byte regMask = 0b0111;
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
     if (reg == Memory::ByteRegisters::HL_MEM || 
@@ -139,8 +137,8 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_basic) {
       continue;
     }
 
-    const Byte regCode = reg & regMask;
-    const Byte instruction = blockCode | (opCode << opShift) | regCode;
+    const Byte regCode = reg & REG_MASK;
+    const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
 
     for (int carry = 0; carry <= 1; carry++) {
       for (int a = 0; a <= BYTE_MAX; a++) {
@@ -186,13 +184,11 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_zero_flag) {
   Memory mem;
   InstructionSet iset(mem);
 
-  // this should be the code for ADD A, C which is fine
-  const Byte blockCode = 0b1000'0000;
+  // only testing a single register since basic test covers register select
   const Byte opCode = 0x1;
-  const Byte opShift = 3;
   const Byte regCode = 0x1;
 
-  const Byte instruction = blockCode | (opCode << opShift) | regCode;
+  const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
 
   std::vector<std::tuple<Byte, Byte, Byte>> zeroTests = {
     std::make_tuple(0x0, 0x0, 0x0), 
@@ -236,18 +232,15 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_half_carry) {
   Memory mem;
   InstructionSet iset(mem);
 
-  // this should be the code for ADC A, C which is fine
-  const Byte blockCode = 0b1000'0000;
+  // only testing a single register since basic test covers register select
   const Byte opCode = 0x1;
-  const Byte opShift = 3;
   const Byte regCode = 0x1;
 
-  const Byte instruction = blockCode | (opCode << opShift) | regCode;
-  const Byte halfMax = 0xF;
+  const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
 
   for (int carry = 0; carry <= 1; carry++) {
-    for (Byte a = 0; a <= halfMax; a++) {
-      for (Byte b = 0; b <= halfMax; b++) {
+    for (Byte a = 0; a <= HALF_MAX; a++) {
+      for (Byte b = 0; b <= HALF_MAX; b++) {
         // clear half carry
         mem.clear_half_carry_flag();
 
@@ -265,7 +258,7 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_half_carry) {
         iset.parse_and_execute(instruction);
 
         // check half carry
-        if ((a + b + carry) > halfMax) {
+        if ((a + b + carry) > HALF_MAX) {
           BOOST_TEST(mem.get_half_carry_flag());
         } else {
           BOOST_TEST(!mem.get_half_carry_flag());
@@ -279,11 +272,7 @@ BOOST_AUTO_TEST_CASE(sub_a_r8_basic) {
   Memory mem;
   InstructionSet iset(mem);
 
-  const Byte blockCode = 0b1000'0000;
   const Byte opCode = 0x2;
-  const Byte opShift = 3;
-
-  const Byte regMask = 0b0111;
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
     if (reg == Memory::ByteRegisters::HL_MEM || 
@@ -291,8 +280,8 @@ BOOST_AUTO_TEST_CASE(sub_a_r8_basic) {
       continue;
     }
 
-    const Byte regCode = reg & regMask;
-    const Byte instruction = blockCode | (opCode << opShift) | regCode;
+    const Byte regCode = reg & REG_MASK;
+    const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
 
     for (int a = 0; a <= BYTE_MAX; a++) {
       for (int b = 0; b <= BYTE_MAX; b++) {
@@ -320,6 +309,13 @@ BOOST_AUTO_TEST_CASE(sub_a_r8_basic) {
         } else {
           BOOST_TEST(!mem.get_carry_flag());
         }
+
+        // check zero flag
+        if (a == b) {
+          BOOST_TEST(mem.get_zero_flag());
+        } else {
+          BOOST_TEST(!mem.get_zero_flag());
+        }
       }
     }
   }
@@ -329,9 +325,7 @@ BOOST_AUTO_TEST_CASE(and_a_r8) {
   Memory mem;
   InstructionSet iset(mem);
 
-  const Byte blockCode = 0b1000'0000;
   const Byte opCode = 0x4;
-  const Byte opShift = 3;
 
   for (Byte reg = 0; reg < CHAR_BIT; reg++) {
     if (reg == Memory::ByteRegisters::A || 
@@ -339,7 +333,7 @@ BOOST_AUTO_TEST_CASE(and_a_r8) {
       continue;
     }
 
-    const Byte instruction = blockCode | (opCode << opShift) | reg;
+    const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | reg;
 
     for (int a = 0; a <= BYTE_MAX; a++) {
       for (int b = 0; b <= BYTE_MAX; b++) {
@@ -379,9 +373,7 @@ BOOST_AUTO_TEST_CASE(xor_a_r8) {
   Memory mem;
   InstructionSet iset(mem);
 
-  const Byte blockCode = 0b1000'0000;
   const Byte opCode = 0x5;
-  const Byte opShift = 3;
 
   for (Byte reg = 0; reg < CHAR_BIT; reg++) {
     if (reg == Memory::ByteRegisters::A || 
@@ -389,7 +381,7 @@ BOOST_AUTO_TEST_CASE(xor_a_r8) {
       continue;
     }
 
-    const Byte instruction = blockCode | (opCode << opShift) | reg;
+    const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | reg;
 
     for (int a = 0; a <= BYTE_MAX; a++) {
       for (int b = 0; b <= BYTE_MAX; b++) {
@@ -429,9 +421,7 @@ BOOST_AUTO_TEST_CASE(or_a_r8) {
   Memory mem;
   InstructionSet iset(mem);
 
-  const Byte blockCode = 0b1000'0000;
   const Byte opCode = 0x6;
-  const Byte opShift = 3;
 
   for (Byte reg = 0; reg < CHAR_BIT; reg++) {
     if (reg == Memory::ByteRegisters::A || 
@@ -439,7 +429,7 @@ BOOST_AUTO_TEST_CASE(or_a_r8) {
       continue;
     }
 
-    const Byte instruction = blockCode | (opCode << opShift) | reg;
+    const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | reg;
 
     for (int a = 0; a <= BYTE_MAX; a++) {
       for (int b = 0; b <= BYTE_MAX; b++) {
