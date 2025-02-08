@@ -8,6 +8,7 @@
 
 #include <climits>
 #include <limits>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -150,6 +151,158 @@ BOOST_AUTO_TEST_CASE(add_a_r8_half_carry) {
         BOOST_TEST(mem.get_half_carry_flag());
       } else {
         BOOST_TEST(!mem.get_half_carry_flag());
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(adc_a_r8_basic) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  const Byte blockCode = 0b1000'0000;
+  const Byte opCode = 0x1;
+  const Byte opShift = 3;
+
+  const Byte regMask = 0b0111;
+
+  for (int reg = 0; reg < CHAR_BIT; reg++) {
+    if (reg == Memory::ByteRegisters::HL_MEM || 
+        reg == Memory::ByteRegisters::A) {
+      continue;
+    }
+
+    const Byte regCode = reg & regMask;
+    const Byte instruction = blockCode | (opCode << opShift) | regCode;
+
+    for (int carry = 0; carry <= 1; carry++) {
+      for (int a = 0; a <= BYTE_MAX; a++) {
+        for (int b = 0; b <= BYTE_MAX; b++) {
+          // clear test flags
+          mem.clear_sub_flag();
+          mem.clear_carry_flag();
+
+          // set registers
+          mem.set_r8(Memory::ByteRegisters::A, a);
+          mem.set_r8(regCode, b);
+
+          // set carry flag
+          if (carry == 1) {
+            mem.set_carry_flag();
+          } else {
+            mem.clear_carry_flag();
+          }
+
+          // add
+          iset.parse_and_execute(instruction);
+
+          // check sum
+          BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == 
+              static_cast<Byte>(a + b + carry));
+
+          // check N flag
+          BOOST_TEST(!mem.get_sub_flag());
+
+          // check carry flag
+          if ((a + b + carry) > BYTE_MAX) {
+            BOOST_TEST(mem.get_carry_flag());
+          } else {
+            BOOST_TEST(!mem.get_carry_flag());
+          }
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(adc_a_r8_zero_flag) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  // this should be the code for ADD A, C which is fine
+  const Byte blockCode = 0b1000'0000;
+  const Byte opCode = 0x1;
+  const Byte opShift = 3;
+  const Byte regCode = 0x1;
+
+  const Byte instruction = blockCode | (opCode << opShift) | regCode;
+
+  std::vector<std::tuple<Byte, Byte, Byte>> zeroTests = {
+    std::make_tuple(0x0, 0x0, 0x0), 
+    std::make_tuple(0xFF, 0x1, 0x0), 
+    std::make_tuple(0xFF, 0x0, 0x1),
+    std::make_tuple(0xFE, 0x2, 0x0), 
+    std::make_tuple(0xFE, 0x1, 0x1), 
+    std::make_tuple(0xFD, 0x3, 0x0),
+    std::make_tuple(0xFD, 0x2, 0x1),
+    std::make_tuple(0xFC, 0x4, 0x0), 
+    std::make_tuple(0xFC, 0x3, 0x1), 
+    std::make_tuple(0xFB, 0x5, 0x0), 
+    std::make_tuple(0xFB, 0x4, 0x1), 
+    std::make_tuple(0xCD, 0x33, 0x0),
+    std::make_tuple(0xCD, 0x32, 0x1)
+  };
+
+  for (auto const& [a, b, carry] : zeroTests) {
+    // clear test flags
+    mem.clear_zero_flag();
+
+    // set registers
+    mem.set_r8(Memory::ByteRegisters::A, a);
+    mem.set_r8(regCode, b);
+
+    if (carry == 1) {
+      mem.set_carry_flag();
+    } else {
+      mem.clear_carry_flag();
+    }
+
+    // add
+    iset.parse_and_execute(instruction);
+
+    // check zero flag
+    BOOST_TEST(mem.get_zero_flag());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(adc_a_r8_half_carry) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  // this should be the code for ADC A, C which is fine
+  const Byte blockCode = 0b1000'0000;
+  const Byte opCode = 0x1;
+  const Byte opShift = 3;
+  const Byte regCode = 0x1;
+
+  const Byte instruction = blockCode | (opCode << opShift) | regCode;
+  const Byte halfMax = 0xF;
+
+  for (int carry = 0; carry <= 1; carry++) {
+    for (Byte a = 0; a <= halfMax; a++) {
+      for (Byte b = 0; b <= halfMax; b++) {
+        // clear half carry
+        mem.clear_half_carry_flag();
+
+        if (carry == 1) {
+          mem.set_carry_flag();
+        } else {
+          mem.clear_carry_flag();
+        }
+
+        // set registers
+        mem.set_r8(Memory::ByteRegisters::A, a);
+        mem.set_r8(regCode, b);
+
+        // add
+        iset.parse_and_execute(instruction);
+
+        // check half carry
+        if ((a + b + carry) > halfMax) {
+          BOOST_TEST(mem.get_half_carry_flag());
+        } else {
+          BOOST_TEST(!mem.get_half_carry_flag());
+        }
       }
     }
   }

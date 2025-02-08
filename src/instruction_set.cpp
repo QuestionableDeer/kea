@@ -155,17 +155,24 @@ void InstructionSet::add_a_r8(const Byte regId) {
   // update flags
   if (result == 0) {
     memory_.set_zero_flag();
+  } else {
+    memory_.clear_zero_flag();
   }
 
   memory_.clear_sub_flag();
 
+  // if we con't clear carry flags here, they could mess up chained ops?
   const Byte carry = 0;
   if (check_half_carry(aVal, bVal, carry)) {
     memory_.set_half_carry_flag();
+  } else {
+    memory_.clear_half_carry_flag();
   }
 
   if (check_full_carry(aVal, bVal, carry)) {
     memory_.set_carry_flag();
+  } else {
+    memory_.clear_carry_flag();
   }
 
   // increment cycles and PC by 1
@@ -186,24 +193,29 @@ void InstructionSet::adc_a_r8(const Byte regId) {
   // update flags
   if (result == 0) {
     memory_.set_zero_flag();
+  } else {
+    memory_.clear_zero_flag();
   }
 
   memory_.clear_sub_flag();
 
+  // if we con't clear carry flags here, they could mess up chained ops?
   if (check_half_carry(aVal, bVal, carry)) {
     memory_.set_half_carry_flag();
+  } else {
+    memory_.clear_half_carry_flag();
   }
 
   if (check_full_carry(aVal, bVal, carry)) {
     memory_.set_carry_flag();
+  } else {
+    memory_.clear_carry_flag();
   }
 
   // increment cycles and PC by 1
   memory_.pc++;
   instructionTimer_++;
-
 }
-
 
 void InstructionSet::and_a_r8(const Byte regId) {
   // obtain result
@@ -216,6 +228,8 @@ void InstructionSet::and_a_r8(const Byte regId) {
   // update flags
   if (result == 0) {
     memory_.set_zero_flag();
+  } else {
+    memory_.clear_zero_flag();
   }
 
   memory_.clear_sub_flag();
@@ -238,6 +252,8 @@ void InstructionSet::xor_a_r8(const Byte regId) {
   // update flags
   if (result == 0) {
     memory_.set_zero_flag();
+  } else {
+    memory_.clear_zero_flag();
   }
 
   memory_.clear_sub_flag();
@@ -260,6 +276,8 @@ void InstructionSet::or_a_r8(const Byte regId) {
   // update flags
   if (result == 0) {
     memory_.set_zero_flag();
+  } else {
+    memory_.clear_zero_flag();
   }
 
   memory_.clear_sub_flag();
