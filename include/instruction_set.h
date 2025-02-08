@@ -31,6 +31,7 @@ private:
   void add_a_r8(const Byte regId);
   void adc_a_r8(const Byte regId);
   void sub_a_r8(const Byte regId);
+  void sbc_a_r8(const Byte regId);
   void and_a_r8(const Byte regId);
   void xor_a_r8(const Byte regId);
   void or_a_r8(const Byte regId);

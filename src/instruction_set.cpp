@@ -107,6 +107,7 @@ void InstructionSet::resolve_block2_arithmetic(const Byte instruction) {
 
     case 3:
       // sbc
+      sbc_a_r8(reg);
       break;
 
     case 4:
@@ -252,6 +253,43 @@ void InstructionSet::sub_a_r8(const Byte regId) {
 
   // if we con't clear carry flags here, they could mess up chained ops?
   const Byte carry = 0;
+  if (check_half_borrow(aVal, bVal, carry)) {
+    memory_.set_half_carry_flag();
+  } else {
+    memory_.clear_half_carry_flag();
+  }
+
+  if (check_full_borrow(aVal, bVal, carry)) {
+    memory_.set_carry_flag();
+  } else {
+    memory_.clear_carry_flag();
+  }
+
+  // increment cycles and PC by 1
+  memory_.pc++;
+  instructionTimer_++;
+}
+
+void InstructionSet::sbc_a_r8(const Byte regId) {
+  // obtain result
+  const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
+  const Byte bVal = memory_.get_r8(regId);
+  const Byte carry = memory_.get_carry_flag() ? 1 : 0;
+  Byte result = aVal - bVal;
+  result -= carry;
+
+  memory_.set_r8(Memory::ByteRegisters::A, result);
+
+  // update flags
+  if (result == 0) {
+    memory_.set_zero_flag();
+  } else {
+    memory_.clear_zero_flag();
+  }
+
+  memory_.set_sub_flag();
+
+  // if we con't clear carry flags here, they could mess up chained ops?
   if (check_half_borrow(aVal, bVal, carry)) {
     memory_.set_half_carry_flag();
   } else {

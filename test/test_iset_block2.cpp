@@ -353,6 +353,106 @@ BOOST_AUTO_TEST_CASE(sub_a_r8_half_borrow) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(sbc_a_r8_basic) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  const Byte opCode = 0x3;
+
+  for (int reg = 0; reg < CHAR_BIT; reg++) {
+    if (reg == Memory::ByteRegisters::HL_MEM || 
+        reg == Memory::ByteRegisters::A) {
+      continue;
+    }
+
+    const Byte regCode = reg & REG_MASK;
+    const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
+
+    for (int carry = 0; carry <= 1; carry++) {
+      for (int a = 0; a <= BYTE_MAX; a++) {
+        for (int b = 0; b <= BYTE_MAX; b++) {
+          // clear test flags
+          mem.clear_sub_flag();
+
+          if (carry == 1) {
+            mem.set_carry_flag();
+          } else {
+            mem.clear_carry_flag();
+          }
+
+          // set registers
+          mem.set_r8(Memory::ByteRegisters::A, a);
+          mem.set_r8(regCode, b);
+
+          // add
+          iset.parse_and_execute(instruction);
+
+          // check sum
+          BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == 
+              static_cast<Byte>(a - (b + carry)));
+
+          // check N flag
+          BOOST_TEST(mem.get_sub_flag());
+
+          // check carry/borrow flag
+          if ((b + carry) > a) {
+            BOOST_TEST(mem.get_carry_flag());
+          } else {
+            BOOST_TEST(!mem.get_carry_flag());
+          }
+
+          // check zero flag
+          if (static_cast<Byte>(a) == static_cast<Byte>(b + carry)) {
+            BOOST_TEST(mem.get_zero_flag());
+          } else {
+            BOOST_TEST(!mem.get_zero_flag());
+          }
+        }
+      }
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE(sbc_a_r8_half_borrow) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  // only testing a single register since basic test covers register select
+  const Byte opCode = 0x3;
+  const Byte regCode = 0x1;
+
+  const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
+
+  for (Byte carry = 0; carry <= 1; carry++) {
+    for (Byte a = 0; a <= HALF_MAX; a++) {
+      for (Byte b = 0; b <= HALF_MAX; b++) {
+        // clear half carry
+        mem.clear_half_carry_flag();
+
+        if (carry == 1) {
+          mem.set_carry_flag();
+        } else {
+          mem.clear_carry_flag();
+        }
+
+        // set registers
+        mem.set_r8(Memory::ByteRegisters::A, a);
+        mem.set_r8(regCode, b);
+
+        // subtract
+        iset.parse_and_execute(instruction);
+
+        // check half carry/borrow
+        if ((b + carry) > a) {
+          BOOST_TEST(mem.get_half_carry_flag());
+        } else {
+          BOOST_TEST(!mem.get_half_carry_flag());
+        }
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(and_a_r8) {
   Memory mem;
   InstructionSet iset(mem);
