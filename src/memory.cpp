@@ -143,6 +143,8 @@ void Memory::set_r8(const Byte id, Byte value) {
 }
 
 auto Memory::get_r8(const Byte id) const -> Byte {
+  // TODO: this will need to be broken down into sub-states 
+  // for accurate timing later
   if (id == ByteRegisters::HL_MEM) {
     const Byte lo = byteRegisters_[ByteRegisters::L];
     const Byte hi = byteRegisters_[ByteRegisters::H];

@@ -321,6 +321,38 @@ BOOST_AUTO_TEST_CASE(sub_a_r8_basic) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(sub_a_r8_half_borrow) {
+  Memory mem;
+  InstructionSet iset(mem);
+
+  // only testing a single register since basic test covers register select
+  const Byte opCode = 0x2;
+  const Byte regCode = 0x1;
+
+  const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
+
+  for (Byte a = 0; a <= HALF_MAX; a++) {
+    for (Byte b = 0; b <= HALF_MAX; b++) {
+      // clear half carry
+      mem.clear_half_carry_flag();
+
+      // set registers
+      mem.set_r8(Memory::ByteRegisters::A, a);
+      mem.set_r8(regCode, b);
+
+      // subtract
+      iset.parse_and_execute(instruction);
+
+      // check half carry/borrow
+      if (b > a) {
+        BOOST_TEST(mem.get_half_carry_flag());
+      } else {
+        BOOST_TEST(!mem.get_half_carry_flag());
+      }
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE(and_a_r8) {
   Memory mem;
   InstructionSet iset(mem);
