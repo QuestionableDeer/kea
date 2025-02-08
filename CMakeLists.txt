@@ -40,7 +40,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/i
 
 enable_testing()
 
-set(test_sources test/test_bits.cpp test/test_memory.cpp test/test_instruction_set.cpp)
+set(test_sources test/test_bits.cpp test/test_memory.cpp test/test_iset_block1.cpp test/test_iset_block2.cpp)
 set(test_helpers src/memory.cpp src/instruction_set.cpp)
 
 include(cmake/BoostTestHelpers.cmake)
