@@ -1,15 +1,15 @@
 #define BOOST_TEST_MODULE iset_block1_tests
 #include <boost/test/included/unit_test.hpp>
+#include <climits>
+#include <limits>
 
 #include "bits.h"
 #include "instruction_set.h"
 #include "memory.h"
 #include "types.h"
 
-#include <climits>
-#include <limits>
-
-constexpr static int BYTE_MAX = static_cast<int>(std::numeric_limits<Byte>::max());
+constexpr static int BYTE_MAX =
+    static_cast<int>(std::numeric_limits<Byte>::max());
 
 BOOST_AUTO_TEST_CASE(load_r8_r8) {
   Memory mem;

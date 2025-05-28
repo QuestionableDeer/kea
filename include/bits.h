@@ -1,9 +1,9 @@
 #ifndef KEA_BITS_H
 #define KEA_BITS_H
 
-#include "types.h"
-
 #include <climits>
+
+#include "types.h"
 
 namespace KeaBits {
 
@@ -23,14 +23,10 @@ constexpr auto getHighByte(Word word) -> Byte {
   return static_cast<Byte>((word >> CHAR_BIT) & loMask);
 }
 
-constexpr auto getLowNibble(Byte b) -> Byte {
-  return (b & loNibMask);
-}
+constexpr auto getLowNibble(Byte b) -> Byte { return (b & loNibMask); }
 
-constexpr auto getHighNibble(Byte b) -> Byte {
-  return (b >> (CHAR_BIT / 2));
-}
+constexpr auto getHighNibble(Byte b) -> Byte { return (b >> (CHAR_BIT / 2)); }
 
-}; // namespace KeaBits
+};  // namespace KeaBits
 
-#endif // KEA_BITS_H
+#endif  // KEA_BITS_H

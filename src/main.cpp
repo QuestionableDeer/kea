@@ -1,8 +1,8 @@
+#include <iostream>
+
 #include "bits.h"
 #include "memory.h"
 #include "types.h"
-
-#include <iostream>
 
 auto main() -> int {
   Word test = 0xAAFF;

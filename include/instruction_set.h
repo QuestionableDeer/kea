@@ -1,23 +1,26 @@
 #ifndef KEA_INSTRUCTION_SET_H
 #define KEA_INSTRUCTION_SET_H
 
-#include "types.h"
-
-#include "memory.h"
-
 #include <functional>
 
+#include "memory.h"
+#include "types.h"
+
 class InstructionSet {
-public:
+ public:
   explicit InstructionSet(Memory& mem);
 
   void parse_and_execute(const Byte instruction);
 
-private:
-  [[nodiscard]] static auto check_half_carry(const Byte op1, const Byte op2, const Byte carry) -> bool;
-  [[nodiscard]] static auto check_full_carry(const Word op1, const Word op2, const Word carry) -> bool;
-  [[nodiscard]] static auto check_half_borrow(const Byte op1, const Byte op2, const Byte carry) -> bool;
-  [[nodiscard]] static auto check_full_borrow(const Word op1, const Word op2, const Word carry) -> bool;
+ private:
+  [[nodiscard]] static auto check_half_carry(const Byte op1, const Byte op2,
+                                             const Byte carry) -> bool;
+  [[nodiscard]] static auto check_full_carry(const Word op1, const Word op2,
+                                             const Word carry) -> bool;
+  [[nodiscard]] static auto check_half_borrow(const Byte op1, const Byte op2,
+                                              const Byte carry) -> bool;
+  [[nodiscard]] static auto check_full_borrow(const Word op1, const Word op2,
+                                              const Word carry) -> bool;
   void resolve_block2_arithmetic(const Byte instruction);
 
   // block 0 instructions
@@ -43,9 +46,7 @@ private:
   constexpr static Byte selectMask = 0b1100'0000;
 
   Memory& memory_;
-  uint64_t instructionTimer_={0};
+  uint64_t instructionTimer_ = {0};
 };
 
-
-#endif // KEA_INSTRUCTION_SET_H
-
+#endif  // KEA_INSTRUCTION_SET_H

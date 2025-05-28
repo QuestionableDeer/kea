@@ -1,18 +1,18 @@
 #define BOOST_TEST_MODULE iset_block2_tests
 #include <boost/test/included/unit_test.hpp>
-
-#include "bits.h"
-#include "instruction_set.h"
-#include "memory.h"
-#include "types.h"
-
 #include <climits>
 #include <limits>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-constexpr static int BYTE_MAX = static_cast<int>(std::numeric_limits<Byte>::max());
+#include "bits.h"
+#include "instruction_set.h"
+#include "memory.h"
+#include "types.h"
+
+constexpr static int BYTE_MAX =
+    static_cast<int>(std::numeric_limits<Byte>::max());
 constexpr static Byte HALF_MAX = 0xF;
 constexpr static Byte BLOCK_CODE = 0b1000'0000;
 constexpr static Byte OP_SHIFT = 0x3;
@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_CASE(add_a_r8_basic) {
   InstructionSet iset(mem);
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::HL_MEM || 
+    if (reg == Memory::ByteRegisters::HL_MEM ||
         reg == Memory::ByteRegisters::A) {
       continue;
     }
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(add_a_r8_basic) {
         iset.parse_and_execute(instruction);
 
         // check sum
-        BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == 
-            static_cast<Byte>(a + b));
+        BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) ==
+                   static_cast<Byte>(a + b));
 
         // check N flag
         BOOST_TEST(!mem.get_sub_flag());
@@ -68,15 +68,14 @@ BOOST_AUTO_TEST_CASE(add_a_r8_zero_flag) {
   Memory mem;
   InstructionSet iset(mem);
 
-  // we only test a single register here, since basic test 
+  // we only test a single register here, since basic test
   // covers register selection
   const Byte regCode = 0x1;
   const Byte instruction = BLOCK_CODE | regCode;
 
   std::vector<std::pair<Byte, Byte>> zeroTests = {
-    {0x0, 0x0}, {0xFF, 0x1}, {0xFE, 0x2}, {0xFD, 0x3},
-    {0xFC, 0x4}, {0xFB, 0x5}, {0xCD, 0x33}
-  };
+      {0x0, 0x0},  {0xFF, 0x1}, {0xFE, 0x2}, {0xFD, 0x3},
+      {0xFC, 0x4}, {0xFB, 0x5}, {0xCD, 0x33}};
 
   for (auto const& [a, b] : zeroTests) {
     // clear test flags
@@ -98,7 +97,7 @@ BOOST_AUTO_TEST_CASE(add_a_r8_half_carry) {
   Memory mem;
   InstructionSet iset(mem);
 
-  // we only test a single register here, since basic test 
+  // we only test a single register here, since basic test
   // covers register selection
   const Byte regCode = 0x1;
   const Byte instruction = BLOCK_CODE | regCode;
@@ -132,7 +131,7 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_basic) {
   const Byte opCode = 0x1;
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::HL_MEM || 
+    if (reg == Memory::ByteRegisters::HL_MEM ||
         reg == Memory::ByteRegisters::A) {
       continue;
     }
@@ -162,8 +161,8 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_basic) {
           iset.parse_and_execute(instruction);
 
           // check sum
-          BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == 
-              static_cast<Byte>(a + b + carry));
+          BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) ==
+                     static_cast<Byte>(a + b + carry));
 
           // check N flag
           BOOST_TEST(!mem.get_sub_flag());
@@ -191,20 +190,13 @@ BOOST_AUTO_TEST_CASE(adc_a_r8_zero_flag) {
   const Byte instruction = BLOCK_CODE | (opCode << OP_SHIFT) | regCode;
 
   std::vector<std::tuple<Byte, Byte, Byte>> zeroTests = {
-    std::make_tuple(0x0, 0x0, 0x0), 
-    std::make_tuple(0xFF, 0x1, 0x0), 
-    std::make_tuple(0xFF, 0x0, 0x1),
-    std::make_tuple(0xFE, 0x2, 0x0), 
-    std::make_tuple(0xFE, 0x1, 0x1), 
-    std::make_tuple(0xFD, 0x3, 0x0),
-    std::make_tuple(0xFD, 0x2, 0x1),
-    std::make_tuple(0xFC, 0x4, 0x0), 
-    std::make_tuple(0xFC, 0x3, 0x1), 
-    std::make_tuple(0xFB, 0x5, 0x0), 
-    std::make_tuple(0xFB, 0x4, 0x1), 
-    std::make_tuple(0xCD, 0x33, 0x0),
-    std::make_tuple(0xCD, 0x32, 0x1)
-  };
+      std::make_tuple(0x0, 0x0, 0x0),  std::make_tuple(0xFF, 0x1, 0x0),
+      std::make_tuple(0xFF, 0x0, 0x1), std::make_tuple(0xFE, 0x2, 0x0),
+      std::make_tuple(0xFE, 0x1, 0x1), std::make_tuple(0xFD, 0x3, 0x0),
+      std::make_tuple(0xFD, 0x2, 0x1), std::make_tuple(0xFC, 0x4, 0x0),
+      std::make_tuple(0xFC, 0x3, 0x1), std::make_tuple(0xFB, 0x5, 0x0),
+      std::make_tuple(0xFB, 0x4, 0x1), std::make_tuple(0xCD, 0x33, 0x0),
+      std::make_tuple(0xCD, 0x32, 0x1)};
 
   for (auto const& [a, b, carry] : zeroTests) {
     // clear test flags
@@ -275,7 +267,7 @@ BOOST_AUTO_TEST_CASE(sub_a_r8_basic) {
   const Byte opCode = 0x2;
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::HL_MEM || 
+    if (reg == Memory::ByteRegisters::HL_MEM ||
         reg == Memory::ByteRegisters::A) {
       continue;
     }
@@ -297,8 +289,8 @@ BOOST_AUTO_TEST_CASE(sub_a_r8_basic) {
         iset.parse_and_execute(instruction);
 
         // check diff
-        BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == 
-            static_cast<Byte>(a - b));
+        BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) ==
+                   static_cast<Byte>(a - b));
 
         // check N flag
         BOOST_TEST(mem.get_sub_flag());
@@ -360,7 +352,7 @@ BOOST_AUTO_TEST_CASE(sbc_a_r8_basic) {
   const Byte opCode = 0x3;
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::HL_MEM || 
+    if (reg == Memory::ByteRegisters::HL_MEM ||
         reg == Memory::ByteRegisters::A) {
       continue;
     }
@@ -388,8 +380,8 @@ BOOST_AUTO_TEST_CASE(sbc_a_r8_basic) {
           iset.parse_and_execute(instruction);
 
           // check diff
-          BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) == 
-              static_cast<Byte>(a - (b + carry)));
+          BOOST_TEST(mem.get_r8(Memory::ByteRegisters::A) ==
+                     static_cast<Byte>(a - (b + carry)));
 
           // check N flag
           BOOST_TEST(mem.get_sub_flag());
@@ -460,7 +452,7 @@ BOOST_AUTO_TEST_CASE(and_a_r8) {
   const Byte opCode = 0x4;
 
   for (Byte reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::A || 
+    if (reg == Memory::ByteRegisters::A ||
         reg == Memory::ByteRegisters::HL_MEM) {
       continue;
     }
@@ -508,7 +500,7 @@ BOOST_AUTO_TEST_CASE(xor_a_r8) {
   const Byte opCode = 0x5;
 
   for (Byte reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::A || 
+    if (reg == Memory::ByteRegisters::A ||
         reg == Memory::ByteRegisters::HL_MEM) {
       continue;
     }
@@ -556,7 +548,7 @@ BOOST_AUTO_TEST_CASE(or_a_r8) {
   const Byte opCode = 0x6;
 
   for (Byte reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::A || 
+    if (reg == Memory::ByteRegisters::A ||
         reg == Memory::ByteRegisters::HL_MEM) {
       continue;
     }
@@ -604,7 +596,7 @@ BOOST_AUTO_TEST_CASE(cp_a_r8_basic) {
   const Byte opCode = 0x7;
 
   for (int reg = 0; reg < CHAR_BIT; reg++) {
-    if (reg == Memory::ByteRegisters::HL_MEM || 
+    if (reg == Memory::ByteRegisters::HL_MEM ||
         reg == Memory::ByteRegisters::A) {
       continue;
     }

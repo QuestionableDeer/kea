@@ -17,17 +17,16 @@
  *
  */
 
-#include "bits.h"
 #include "instruction_set.h"
 
-InstructionSet::InstructionSet(Memory& mem) : memory_(mem)
-{
-}
+#include "bits.h"
+
+InstructionSet::InstructionSet(Memory &mem) : memory_(mem) {}
 
 void InstructionSet::parse_and_execute(const Byte instruction) {
   const Byte selectShift = 6;
   const Byte selectBits = (instruction & selectMask) >> selectShift;
-  
+
   switch (selectBits) {
     case 0:
       // TODO
@@ -39,7 +38,7 @@ void InstructionSet::parse_and_execute(const Byte instruction) {
       break;
 
     case 2:
-      // TODO
+      // A-register arithmetic
       resolve_block2_arithmetic(instruction);
       break;
 
@@ -54,7 +53,8 @@ void InstructionSet::parse_and_execute(const Byte instruction) {
 }
 
 // static
-auto InstructionSet::check_half_carry(const Byte op1, const Byte op2, const Byte carry) -> bool {
+auto InstructionSet::check_half_carry(const Byte op1, const Byte op2,
+                                      const Byte carry) -> bool {
   const Byte halfMax = 0xF;
   const Byte lo1 = KeaBits::getLowNibble(op1);
   const Byte lo2 = KeaBits::getLowNibble(op2);
@@ -63,13 +63,15 @@ auto InstructionSet::check_half_carry(const Byte op1, const Byte op2, const Byte
 }
 
 // static
-auto InstructionSet::check_full_carry(const Word op1, const Word op2, const Word carry) -> bool {
+auto InstructionSet::check_full_carry(const Word op1, const Word op2,
+                                      const Word carry) -> bool {
   const Word max = 0xFF;
   return (op1 + op2 + carry) > max;
 }
 
 // static
-auto InstructionSet::check_half_borrow(const Byte op1, const Byte op2, const Byte carry) -> bool {
+auto InstructionSet::check_half_borrow(const Byte op1, const Byte op2,
+                                       const Byte carry) -> bool {
   const Byte lo1 = KeaBits::getLowNibble(op1);
   const Byte lo2 = KeaBits::getLowNibble(op2);
 
@@ -77,7 +79,8 @@ auto InstructionSet::check_half_borrow(const Byte op1, const Byte op2, const Byt
 }
 
 // static
-auto InstructionSet::check_full_borrow(const Word op1, const Word op2, const Word carry) -> bool {
+auto InstructionSet::check_full_borrow(const Word op1, const Word op2,
+                                       const Word carry) -> bool {
   return (op2 + carry) > op1;
 }
 
@@ -144,7 +147,7 @@ void InstructionSet::load_r8_r8(const Byte instruction) {
   const Byte source = instruction & srcMask;
   const Byte dest = (instruction & destMask) >> destShift;
 
-  if (source == Memory::ByteRegisters::HL_MEM && 
+  if (source == Memory::ByteRegisters::HL_MEM &&
       dest == Memory::ByteRegisters::HL_MEM) {
     halt();
     return;

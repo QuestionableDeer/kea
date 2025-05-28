@@ -18,10 +18,11 @@
  */
 
 #include "memory.h"
-#include "bits.h"
 
 #include <algorithm>
 #include <iterator>
+
+#include "bits.h"
 
 #ifdef MEM_DEBUG
 #include <cstdlib>
@@ -143,7 +144,7 @@ void Memory::set_r8(const Byte id, Byte value) {
 }
 
 auto Memory::get_r8(const Byte id) const -> Byte {
-  // TODO: this will need to be broken down into sub-states 
+  // TODO: this will need to be broken down into sub-states
   // for accurate timing later
   if (id == ByteRegisters::HL_MEM) {
     const Byte lo = byteRegisters_[ByteRegisters::L];
@@ -192,20 +193,20 @@ auto Memory::get_r16(const Byte id) const -> Word {
   switch (id) {
     case 0:
       // r16 = BC
-      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::C], 
-          byteRegisters_[ByteRegisters::B]);
+      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::C],
+                                     byteRegisters_[ByteRegisters::B]);
       break;
 
     case 1:
       // r16 = DE
-      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::E], 
-          byteRegisters_[ByteRegisters::D]);
+      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::E],
+                                     byteRegisters_[ByteRegisters::D]);
       break;
 
     case 2:
       // r16 = HL
-      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::L], 
-          byteRegisters_[ByteRegisters::H]);
+      value = KeaBits::wordFromBytes(byteRegisters_[ByteRegisters::L],
+                                     byteRegisters_[ByteRegisters::H]);
       break;
 
     case 3:

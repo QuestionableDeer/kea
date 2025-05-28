@@ -1,10 +1,5 @@
 #define BOOST_TEST_MODULE memory_tests
 #include <boost/test/included/unit_test.hpp>
-
-#include "bits.h"
-#include "memory.h"
-#include "types.h"
-
 #include <limits>
 #include <random>
 #include <sstream>
@@ -12,11 +7,17 @@
 #include <string>
 #include <vector>
 
+#include "bits.h"
+#include "memory.h"
+#include "types.h"
+
 static unsigned int seed = 5489;
 static size_t const trials = 1000;
 
-constexpr static int BYTE_MAX = static_cast<int>(std::numeric_limits<Byte>::max());
-constexpr static int WORD_MAX = static_cast<int>(std::numeric_limits<Word>::max());
+constexpr static int BYTE_MAX =
+    static_cast<int>(std::numeric_limits<Byte>::max());
+constexpr static int WORD_MAX =
+    static_cast<int>(std::numeric_limits<Word>::max());
 
 BOOST_AUTO_TEST_CASE(fetch_set_byte_property) {
   std::default_random_engine eng(seed);
@@ -105,14 +106,10 @@ BOOST_AUTO_TEST_CASE(r8_access_by_enum) {
   Memory mem;
 
   const std::vector<Memory::ByteRegisters> validIds = {
-    Memory::ByteRegisters::A,
-    Memory::ByteRegisters::B,
-    Memory::ByteRegisters::C,
-    Memory::ByteRegisters::D,
-    Memory::ByteRegisters::E,
-    Memory::ByteRegisters::H,
-    Memory::ByteRegisters::L
-  };
+      Memory::ByteRegisters::A, Memory::ByteRegisters::B,
+      Memory::ByteRegisters::C, Memory::ByteRegisters::D,
+      Memory::ByteRegisters::E, Memory::ByteRegisters::H,
+      Memory::ByteRegisters::L};
 
   for (const auto& id : validIds) {
     for (int value = 0; value <= BYTE_MAX; value++) {
@@ -190,11 +187,8 @@ BOOST_AUTO_TEST_CASE(r16_access_by_enum) {
   Memory mem;
 
   const std::vector<Memory::WordRegisters> validIds = {
-    Memory::WordRegisters::BC,
-    Memory::WordRegisters::DE,
-    Memory::WordRegisters::HL,
-    Memory::WordRegisters::SP
-  };
+      Memory::WordRegisters::BC, Memory::WordRegisters::DE,
+      Memory::WordRegisters::HL, Memory::WordRegisters::SP};
 
   for (const auto& id : validIds) {
     for (int value = 0; value < WORD_MAX; value++) {
