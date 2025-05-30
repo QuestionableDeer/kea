@@ -58,6 +58,7 @@ class Memory {
 
   void set_carry_flag() { flags_.set(FlagNames::FULL_CARRY); }
   void clear_carry_flag() { flags_.reset(FlagNames::FULL_CARRY); }
+  void flip_carry_flag() { flags_.flip(FlagNames::FULL_CARRY); }
   [[nodiscard]] auto get_carry_flag() const -> bool {
     return flags_[FlagNames::FULL_CARRY];
   }

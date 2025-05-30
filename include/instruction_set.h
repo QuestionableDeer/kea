@@ -1,8 +1,6 @@
 #ifndef KEA_INSTRUCTION_SET_H
 #define KEA_INSTRUCTION_SET_H
 
-#include <functional>
-
 #include "memory.h"
 #include "types.h"
 
@@ -21,10 +19,30 @@ class InstructionSet {
                                               const Byte carry) -> bool;
   [[nodiscard]] static auto check_full_borrow(const Word op1, const Word op2,
                                               const Word carry) -> bool;
+  void resolve_block0_calls(const Byte instruction);
   void resolve_block2_arithmetic(const Byte instruction);
 
   // block 0 instructions
-  // TODO
+  void nop();
+
+  // FIXME: understand stop
+  void stop();
+
+  void resolve_block0_bitwise_op(const Byte instruction);
+  void resolve_jr_call(const Byte instruction);
+  void resolve_imm8_load(const Byte instruction);
+
+  void rlca();
+  void rrca();
+  void rla();
+  void rra();
+
+  // FIXME: understand DAA
+  void daa();
+
+  void cpl();
+  void scf();
+  void ccf();
 
   // block 1 instructions
   void load_r8_r8(const Byte instruction);
