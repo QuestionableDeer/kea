@@ -220,3 +220,10 @@ auto Memory::get_r16(const Byte id) const -> Word {
 
   return value;
 }
+
+// static
+auto Memory::get_r8_from_op(const Byte instruction) -> Byte {
+  const Byte destMask = 0b011'1000;
+  const Byte destShift = 3;
+  return (instruction & destMask) >> destShift;
+}

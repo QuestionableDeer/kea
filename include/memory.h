@@ -3,7 +3,6 @@
 
 #include <array>
 #include <bitset>
-#include <fstream>
 
 #include "types.h"
 
@@ -34,6 +33,8 @@ class Memory {
 
   void set_r16(const Byte id, Word value);
   [[nodiscard]] auto get_r16(const Byte id) const -> Word;
+
+  [[nodiscard]] static auto get_r8_from_op(const Byte instruction) -> Byte;
 
   // TODO: add r16stk and r16mem orders?
 

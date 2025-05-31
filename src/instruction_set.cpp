@@ -102,33 +102,52 @@ void InstructionSet::resolve_block0_calls(const Byte instruction) {
 
   if (instruction == nopCode) {
     nop();
+    return;
   } else if (instruction == stopCode) {
     stop();
+    return;
   } else if (lsbTriple == bitwiseCode) {
     resolve_block0_bitwise_op(instruction);
+    return;
   } else if (lsbTriple == jrCode) {
     resolve_jr_call(instruction);
+    return;
   } else if (lsbTriple == ldCode) {
-    resolve_imm8_load(instruction);
+    load_r8_imm8(instruction);
+    return;
+  }
+
+  // check for
+  if (bitTwo != 0) {
+    if (lsbTriple == 0b100) {
+      inc_r8(instruction);
+      return;
+    } else if (lsbTriple == 0b101) {
+      dec_r8(instruction);
+      return;
+    } else {
+      // should not reach
+      assert(false && "invalid inc/dec code");
+    }
   }
 
   // remaining ops have to be filtered by low bits
   const auto ilow = KeaBits::getLowNibble(instruction);
   switch (ilow) {
     case 0b0001:
-      ld_r16_imm16(instruction);
+      load_r16_imm16(instruction);
       break;
 
     case 0b0010:
-      ld_r16mem_a(instruction);
+      load_r16mem_a(instruction);
       break;
 
     case 0b1010:
-      ld_a_r16mem(instruction);
+      load_a_r16mem(instruction);
       break;
 
     case 0b1000:
-      ld_imm16_sp(instruction);
+      load_imm16_sp(instruction);
       break;
 
     case 0b0011:
@@ -260,9 +279,71 @@ void InstructionSet::resolve_block0_bitwise_op(const Byte instruction) {
   }
 }
 
-void InstructionSet::resolve_jr_call(const Byte instruction) {}
+void InstructionSet::resolve_jr_call(const Byte instruction) {
+  const Byte mask = 0b0010'0000;
 
-void InstructionSet::resolve_imm8_load(const Byte instruction) {}
+  if ((instruction & mask) != 0) {
+    jr_cond_imm8(instruction);
+  } else {
+    jr_imm8();
+  }
+}
+
+void InstructionSet::load_r8_imm8(const Byte instruction) {
+  // load immediate value into register
+
+  // get immediate value and register
+  memory_.pc++;
+  const Byte immVal = memory_.fetchByte(memory_.pc);
+  const Byte dest = Memory::get_r8_from_op(instruction);
+
+  memory_.set_r8(dest, immVal);
+  instructionTimer_ += 2;
+}
+
+void InstructionSet::inc_r8(const Byte instruction) {
+  // increment register
+  const Byte dest = Memory::get_r8_from_op(instruction);
+  const Byte oldVal = memory_.get_r8(dest);
+  memory_.set_r8(dest, oldVal + 1);
+
+  // set flags
+  if ((oldVal + 1) == 0) {
+    memory_.set_zero_flag();
+  }
+
+  const Byte carry = 0;
+  if (check_half_carry(oldVal, 1, carry)) {
+    memory_.set_half_carry_flag();
+  }
+
+  memory_.clear_sub_flag();
+
+  // timing
+  instructionTimer_++;
+}
+
+void InstructionSet::dec_r8(const Byte instruction) {
+  // decrement register
+  const Byte dest = Memory::get_r8_from_op(instruction);
+  const Byte oldVal = memory_.get_r8(dest);
+  memory_.set_r8(dest, oldVal - 1);
+
+  // set flags
+  if ((oldVal - 1) == 0) {
+    memory_.set_zero_flag();
+  }
+
+  const Byte carry = 0;
+  if (check_half_borrow(oldVal, 1, carry)) {
+    memory_.set_half_carry_flag();
+  }
+
+  memory_.set_sub_flag();
+
+  // timing
+  instructionTimer_++;
+}
 
 void InstructionSet::rlca() {
   // rotate register A left
@@ -418,13 +499,75 @@ void InstructionSet::ccf() {
   instructionTimer_++;
 }
 
+void InstructionSet::jr_imm8() {
+  // unconditional relative jump
+
+  // signed offset is next byte after instruction
+  memory_.pc++;
+  const Byte next = memory_.fetchByte(memory_.pc);
+
+  // jump by the offset specified in 'next' byte
+  const int offset = static_cast<int>(next);
+  memory_.pc += offset;
+
+  instructionTimer_ += 3;
+}
+
+void InstructionSet::jr_cond_imm8(const Byte instruction) {
+  // conditional relative jump
+
+  // determine condition for jump
+  const Byte condMask = 0b11000;
+  const Byte condition = instruction & condMask;
+
+  // get offset
+  memory_.pc++;
+  const Byte next = memory_.fetchByte(memory_.pc);
+  const int offset = static_cast<int>(next);
+
+  // test condition
+  bool shouldJump = false;
+  switch (condition) {
+    case 0:
+      // NZ - zero flag not set
+      shouldJump = !memory_.get_zero_flag();
+      break;
+
+    case 1:
+      // Z - zero flag set
+      shouldJump = memory_.get_zero_flag();
+      break;
+
+    case 2:
+      // NC - carry flag not set
+      shouldJump = !memory_.get_carry_flag();
+      break;
+
+    case 3:
+      // C - carry flag set
+      shouldJump = memory_.get_carry_flag();
+      break;
+
+    default:
+      // not reachable
+      assert(false && "invalid condition code for jump");
+      break;
+  }
+
+  // execute jump
+  if (shouldJump) {
+    memory_.pc += offset;
+    instructionTimer_ += 3;
+  } else {
+    instructionTimer_ += 2;
+  }
+}
+
 void InstructionSet::load_r8_r8(const Byte instruction) {
   const Byte srcMask = 0b0111;
-  const Byte destMask = 0b011'1000;
-  const Byte destShift = 3;
-
   const Byte source = instruction & srcMask;
-  const Byte dest = (instruction & destMask) >> destShift;
+
+  const Byte dest = Memory::get_r8_from_op(instruction);
 
   if (source == Memory::ByteRegisters::HL_MEM &&
       dest == Memory::ByteRegisters::HL_MEM) {

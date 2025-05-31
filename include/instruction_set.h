@@ -30,7 +30,11 @@ class InstructionSet {
 
   void resolve_block0_bitwise_op(const Byte instruction);
   void resolve_jr_call(const Byte instruction);
-  void resolve_imm8_load(const Byte instruction);
+
+  void load_r8_imm8(const Byte instruction);
+
+  void inc_r8(const Byte instruction);
+  void dec_r8(const Byte instruction);
 
   void rlca();
   void rrca();
@@ -43,6 +47,8 @@ class InstructionSet {
   void cpl();
   void scf();
   void ccf();
+  void jr_imm8();
+  void jr_cond_imm8(const Byte instruction);
 
   // block 1 instructions
   void load_r8_r8(const Byte instruction);
