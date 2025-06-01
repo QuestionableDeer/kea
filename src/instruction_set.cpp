@@ -137,7 +137,7 @@ void InstructionSet::resolve_block0_calls(const Byte instruction) {
     return;
   }
 
-  // check for
+  // check for inc/dec operations
   if (bitTwo != 0) {
     if (lsbTriple == 0b100) {
       inc_r8(instruction);
@@ -315,12 +315,16 @@ void InstructionSet::load_r16_imm16(const Byte instruction) {
   // get register
   const Byte dest = Memory::get_r16_from_op(instruction);
 
-  // get imm value
+  // get imm16 value
   memory_.pc++;
   const Word immVal = memory_.fetchWord(memory_.pc);
+
+  // increment past second byte of imm16 value
   memory_.pc++;
 
   memory_.set_r16(dest, immVal);
+
+  // advance
   memory_.pc++;
   instructionTimer_ += 3;
 }
@@ -336,6 +340,8 @@ void InstructionSet::load_r16mem_a(const Byte instruction) {
 
   // set values
   memory_.setByte(memDest, memory_.get_r8(Memory::ByteRegisters::A));
+
+  // advance
   memory_.pc++;
   instructionTimer_ += 2;
 }
@@ -363,6 +369,8 @@ void InstructionSet::load_imm16mem_sp() {
   // get imm value
   memory_.pc++;
   const Word immVal = memory_.fetchWord(memory_.pc);
+
+  // increment past second byte of imm16 value
   memory_.pc++;
 
   // set memory
@@ -432,6 +440,8 @@ void InstructionSet::load_r8_imm8(const Byte instruction) {
   const Byte dest = Memory::get_r8_from_op(instruction);
 
   memory_.set_r8(dest, immVal);
+
+  // advance
   memory_.pc++;
   instructionTimer_ += 2;
 }
