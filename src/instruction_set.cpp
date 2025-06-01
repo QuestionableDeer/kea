@@ -58,8 +58,8 @@ void InstructionSet::parse_and_execute(const Byte instruction) {
 }
 
 // static
-auto InstructionSet::check_half_carry(const Byte op1, const Byte op2,
-                                      const Byte carry) -> bool {
+auto InstructionSet::check_byte_half_carry(const Byte op1, const Byte op2,
+                                           const Byte carry) -> bool {
   const Byte halfMax = 0xF;
   const Byte lo1 = KeaBits::getLowNibble(op1);
   const Byte lo2 = KeaBits::getLowNibble(op2);
@@ -68,9 +68,29 @@ auto InstructionSet::check_half_carry(const Byte op1, const Byte op2,
 }
 
 // static
-auto InstructionSet::check_full_carry(const Word op1, const Word op2,
-                                      const Word carry) -> bool {
+auto InstructionSet::check_word_half_carry(const Word op1, const Word op2,
+                                           const Byte carry) -> bool {
+  // this is both max value and mask
+  const Word wordHalfMax = 0xFFF;
+
+  const Word op1Lower = op1 & wordHalfMax;
+  const Word op2Lower = op2 & wordHalfMax;
+
+  return (op1Lower + op2Lower + carry) > wordHalfMax;
+}
+
+// static
+auto InstructionSet::check_byte_full_carry(const Word op1, const Word op2,
+                                           const Byte carry) -> bool {
   const Word max = 0xFF;
+  return (op1 + op2 + carry) > max;
+}
+
+// static
+auto InstructionSet::check_word_full_carry(const DoubleWord op1,
+                                           const DoubleWord op2,
+                                           const Byte carry) -> bool {
+  const DoubleWord max = 0xFFFF;
   return (op1 + op2 + carry) > max;
 }
 
@@ -147,7 +167,7 @@ void InstructionSet::resolve_block0_calls(const Byte instruction) {
       break;
 
     case 0b1000:
-      load_imm16_sp(instruction);
+      load_imm16mem_sp();
       break;
 
     case 0b0011:
@@ -289,6 +309,120 @@ void InstructionSet::resolve_jr_call(const Byte instruction) {
   }
 }
 
+void InstructionSet::load_r16_imm16(const Byte instruction) {
+  // load 16-bit immediate value into register
+
+  // get register
+  const Byte dest = Memory::get_r16_from_op(instruction);
+
+  // get imm value
+  memory_.pc++;
+  const Word immVal = memory_.fetchWord(memory_.pc);
+  memory_.pc++;
+
+  memory_.set_r16(dest, immVal);
+  memory_.pc++;
+  instructionTimer_ += 3;
+}
+
+void InstructionSet::load_r16mem_a(const Byte instruction) {
+  // load value in register A into memory location pointed to by register
+
+  // get register
+  const Byte addrReg = Memory::get_r16_from_op(instruction);
+
+  // get memory location
+  const Word memDest = memory_.get_r16(addrReg);
+
+  // set values
+  memory_.setByte(memDest, memory_.get_r8(Memory::ByteRegisters::A));
+  memory_.pc++;
+  instructionTimer_ += 2;
+}
+
+void InstructionSet::load_a_r16mem(const Byte instruction) {
+  // load value from memory location in register into reg A
+
+  // get register
+  const Byte addrReg = Memory::get_r16_from_op(instruction);
+  const Word memSrc = memory_.get_r16(addrReg);
+
+  // get value
+  const Byte memVal = memory_.fetchByte(memSrc);
+
+  memory_.set_r8(Memory::ByteRegisters::A, memVal);
+
+  // advance
+  memory_.pc++;
+  instructionTimer_ += 2;
+}
+
+void InstructionSet::load_imm16mem_sp() {
+  // copy SP to immediate memory location
+
+  // get imm value
+  memory_.pc++;
+  const Word immVal = memory_.fetchWord(memory_.pc);
+  memory_.pc++;
+
+  // set memory
+  memory_.setWord(immVal, memory_.get_r16(Memory::WordRegisters::SP));
+
+  // advance
+  memory_.pc++;
+  instructionTimer_ += 5;
+}
+
+void InstructionSet::inc_r16(const Byte instruction) {
+  // increment value in r16, no flag updates
+
+  const Byte dest = Memory::get_r16_from_op(instruction);
+  memory_.set_r16(dest, memory_.get_r16(dest) + 1);
+
+  // advance
+  memory_.pc++;
+  instructionTimer_ += 2;
+}
+
+void InstructionSet::dec_r16(const Byte instruction) {
+  // decrement value in r16, no flag updates
+
+  const Byte dest = Memory::get_r16_from_op(instruction);
+  memory_.set_r16(dest, memory_.get_r16(dest) - 1);
+
+  // advance
+  memory_.pc++;
+  instructionTimer_ += 2;
+}
+
+void InstructionSet::add_hl_r16(const Byte instruction) {
+  // add the value in HL to target register, does set flags
+
+  // get value to add
+  const Byte dest = Memory::get_r16_from_op(instruction);
+  const Word val = memory_.get_r16(dest);
+
+  // add
+  const Word hlVal = memory_.get_r16(Memory::WordRegisters::HL);
+  memory_.set_r16(Memory::WordRegisters::HL, hlVal + val);
+
+  // set flags
+  memory_.clear_sub_flag();
+
+  const Byte carry = 0;
+  if (check_word_half_carry(hlVal, val, carry)) {
+    memory_.set_half_carry_flag();
+  }
+
+  if (check_word_full_carry(hlVal, val, carry)) {
+    memory_.set_carry_flag();
+  }
+
+  // advance
+  memory_.pc++;
+  instructionTimer_ += 2;
+}
+
 void InstructionSet::load_r8_imm8(const Byte instruction) {
   // load immediate value into register
 
@@ -298,6 +432,7 @@ void InstructionSet::load_r8_imm8(const Byte instruction) {
   const Byte dest = Memory::get_r8_from_op(instruction);
 
   memory_.set_r8(dest, immVal);
+  memory_.pc++;
   instructionTimer_ += 2;
 }
 
@@ -313,13 +448,14 @@ void InstructionSet::inc_r8(const Byte instruction) {
   }
 
   const Byte carry = 0;
-  if (check_half_carry(oldVal, 1, carry)) {
+  if (check_byte_half_carry(oldVal, 1, carry)) {
     memory_.set_half_carry_flag();
   }
 
   memory_.clear_sub_flag();
 
   // timing
+  memory_.pc++;
   instructionTimer_++;
 }
 
@@ -342,6 +478,7 @@ void InstructionSet::dec_r8(const Byte instruction) {
   memory_.set_sub_flag();
 
   // timing
+  memory_.pc++;
   instructionTimer_++;
 }
 
@@ -508,8 +645,8 @@ void InstructionSet::jr_imm8() {
 
   // jump by the offset specified in 'next' byte
   const int offset = static_cast<int>(next);
-  memory_.pc += offset;
 
+  memory_.pc += offset;
   instructionTimer_ += 3;
 }
 
@@ -559,6 +696,7 @@ void InstructionSet::jr_cond_imm8(const Byte instruction) {
     memory_.pc += offset;
     instructionTimer_ += 3;
   } else {
+    memory_.pc++;
     instructionTimer_ += 2;
   }
 }
@@ -606,13 +744,13 @@ void InstructionSet::add_a_r8(const Byte regId) {
 
   // if we con't clear carry flags here, they could mess up chained ops?
   const Byte carry = 0;
-  if (check_half_carry(aVal, bVal, carry)) {
+  if (check_byte_half_carry(aVal, bVal, carry)) {
     memory_.set_half_carry_flag();
   } else {
     memory_.clear_half_carry_flag();
   }
 
-  if (check_full_carry(aVal, bVal, carry)) {
+  if (check_byte_full_carry(aVal, bVal, carry)) {
     memory_.set_carry_flag();
   } else {
     memory_.clear_carry_flag();
@@ -643,13 +781,13 @@ void InstructionSet::adc_a_r8(const Byte regId) {
   memory_.clear_sub_flag();
 
   // if we con't clear carry flags here, they could mess up chained ops?
-  if (check_half_carry(aVal, bVal, carry)) {
+  if (check_byte_half_carry(aVal, bVal, carry)) {
     memory_.set_half_carry_flag();
   } else {
     memory_.clear_half_carry_flag();
   }
 
-  if (check_full_carry(aVal, bVal, carry)) {
+  if (check_byte_full_carry(aVal, bVal, carry)) {
     memory_.set_carry_flag();
   } else {
     memory_.clear_carry_flag();

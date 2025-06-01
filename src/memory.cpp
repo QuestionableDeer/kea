@@ -223,7 +223,14 @@ auto Memory::get_r16(const Byte id) const -> Word {
 
 // static
 auto Memory::get_r8_from_op(const Byte instruction) -> Byte {
-  const Byte destMask = 0b011'1000;
-  const Byte destShift = 3;
-  return (instruction & destMask) >> destShift;
+  const Byte regMask = 0b011'1000;
+  const Byte regShift = 3;
+  return (instruction & regMask) >> regShift;
+}
+
+// static
+auto Memory::get_r16_from_op(const Byte instruction) -> Byte {
+  const Byte regMask = 0b0011'0000;
+  const Byte regShift = 4;
+  return (instruction & regMask) >> regShift;
 }

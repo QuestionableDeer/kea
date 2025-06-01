@@ -35,6 +35,7 @@ class Memory {
   [[nodiscard]] auto get_r16(const Byte id) const -> Word;
 
   [[nodiscard]] static auto get_r8_from_op(const Byte instruction) -> Byte;
+  [[nodiscard]] static auto get_r16_from_op(const Byte instruction) -> Byte;
 
   // TODO: add r16stk and r16mem orders?
 

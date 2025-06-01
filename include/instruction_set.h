@@ -11,10 +11,18 @@ class InstructionSet {
   void parse_and_execute(const Byte instruction);
 
  private:
-  [[nodiscard]] static auto check_half_carry(const Byte op1, const Byte op2,
-                                             const Byte carry) -> bool;
-  [[nodiscard]] static auto check_full_carry(const Word op1, const Word op2,
-                                             const Word carry) -> bool;
+  [[nodiscard]] static auto check_byte_half_carry(const Byte op1,
+                                                  const Byte op2,
+                                                  const Byte carry) -> bool;
+  [[nodiscard]] static auto check_word_half_carry(const Word op1,
+                                                  const Word op2,
+                                                  const Byte carry) -> bool;
+  [[nodiscard]] static auto check_byte_full_carry(const Word op1,
+                                                  const Word op2,
+                                                  const Byte carry) -> bool;
+  [[nodiscard]] static auto check_word_full_carry(const DoubleWord op1,
+                                                  const DoubleWord op2,
+                                                  const Byte carry) -> bool;
   [[nodiscard]] static auto check_half_borrow(const Byte op1, const Byte op2,
                                               const Byte carry) -> bool;
   [[nodiscard]] static auto check_full_borrow(const Word op1, const Word op2,
@@ -31,7 +39,16 @@ class InstructionSet {
   void resolve_block0_bitwise_op(const Byte instruction);
   void resolve_jr_call(const Byte instruction);
 
+  void load_r16_imm16(const Byte instruction);
+  void load_r16mem_a(const Byte instruction);
+  void load_a_r16mem(const Byte instruction);
+  void load_imm16mem_sp();
+
   void load_r8_imm8(const Byte instruction);
+
+  void inc_r16(const Byte instruction);
+  void dec_r16(const Byte instruction);
+  void add_hl_r16(const Byte instruction);
 
   void inc_r8(const Byte instruction);
   void dec_r8(const Byte instruction);
