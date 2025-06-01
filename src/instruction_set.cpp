@@ -599,7 +599,54 @@ void InstructionSet::rra() {
 }
 
 void InstructionSet::daa() {
-  // FIXME: need to understand BCD better
+  // correct BCD representation
+
+  Byte adjust = 0;
+  const bool halfCarry = memory_.get_half_carry_flag();
+  const bool carry = memory_.get_carry_flag();
+  const bool subtract = memory_.get_sub_flag();
+
+  const Byte aVal = memory_.get_r8(Memory::ByteRegisters::A);
+  const Byte halfLimit = 0x9;
+  const Byte fullLimit = 0x99;
+
+  const Byte lastDigit = aVal & 0xF;
+
+  // compute adjustment and flags
+  bool newCarry = false;
+  if ((!subtract && lastDigit > halfLimit) || halfCarry) {
+    adjust += 0x06;
+  }
+
+  if ((!subtract && aVal > fullLimit) || carry) {
+    adjust += 0x60;
+    newCarry = true;
+  }
+
+  // adjust value
+  Byte result = aVal;
+  if (subtract) {
+    result -= adjust;
+  } else {
+    result += adjust;
+  }
+
+  memory_.set_r8(Memory::ByteRegisters::A, result);
+
+  // set flags
+  if (result == 0) {
+    memory_.set_zero_flag();
+  }
+
+  memory_.clear_half_carry_flag();
+
+  if (newCarry) {
+    memory_.set_carry_flag();
+  }
+
+  // advance
+  memory_.pc++;
+  instructionTimer_++;
 }
 
 void InstructionSet::cpl() {
